@@ -1,7 +1,6 @@
 # -*- encoding: utf-8 -*-
 
 require 'sinatra'
-require 'sinatra/cross_origin'
 require 'net/http'
 require "addressable/uri"
 require 'json'
