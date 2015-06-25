@@ -1,7 +1,6 @@
 require 'sinatra/base'
 require 'rack/cors'
 require 'yaml'
-require 'i18n'
 
 Dir.glob('./*.rb').each { |file| require file }
 
