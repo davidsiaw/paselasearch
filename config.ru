@@ -2,6 +2,7 @@ require 'sinatra/base'
 require 'rack/cors'
 require 'yaml'
 
+
 Dir.glob('./*.rb').each { |file| require file }
 
 use Rack::Cors do
