@@ -1,161 +1,189 @@
 <!DOCTYPE html>
 <html lang="en">
-<!--
- index.html
- paselasearch
+<head>
+  <title>Pasela Search</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+</head>
 
- Created by You on June 25, 2015.
- Copyright 2015, Your Company All rights reserved.
--->
-    <head>
-        <meta charset="utf-8">
+<body>
 
-        <!--[if lte IE 8]>
-        <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7, chrome=1">
-        <![endif]-->
-        <!--[if gte IE 9]>
-        <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
-        <![endif]-->
+<div class="container">
+  <div class="row">
+    <div class="col-xs-12">
+        <form class="input-group" id="search-form">
+          <input id="searchText" type="text" class="form-control" placeholder="Search for...">
+          <span class="input-group-btn">
+            <button class="btn btn-default" type="submit">Search!</button>
+          </span>
+        </form>
+    </div>
+  </div>
 
-        <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+  <div class="row">
+    <div class="col-xs-12">
+		<div class="progress">
+			<div id="progressBar" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em;">
+			0%
+			</div>
+		</div>
+    </div>
+  </div>
 
-        <meta name="apple-mobile-web-app-capable" content="yes">
-        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <div class="row">
+  	<table id="searchResultTable" class="table table-striped">
+  		<thead>
+		    <th>No.</th>
+		    <th>歌手名</th>
+		    <th>タイトル</th>
+		    <th>代表曲番号</th>
+		    <th class="hidden-xs">歌い出し</th>
+		    <th class="hidden-xs">タイアップ</th>
+		    <th class="hidden-xs">ジャンル</th>
+  		</thead>
+  		<tbody id="tableBody">
+  		</tbody>
+  	</table>
+  </div>
+</div>
 
-        <link rel="apple-touch-icon" href="Resources/icon.png">
-        <link rel="apple-touch-startup-image" href="Resources/default.png">
+<script type="text/javascript">
+	$(document).ready(function() {
 
-        <title>paselasearch</title>
+		function serialize(obj)
+		{
+			return obj ? Object.keys(obj).map(function (key) {
+				var val = obj[key];
 
-        <!-- Custom javascript goes here -->
-        <!-- End custom javascript -->
+				if (Array.isArray(val)) {
+					return val.map(function (val2) {
+						return encodeURIComponent(key) + '=' + encodeURIComponent(val2);
+					}).join('&');
+				}
 
-        <script type="text/javascript">
-            OBJJ_MAIN_FILE = "main.j";
+				return encodeURIComponent(key) + '=' + encodeURIComponent(val);
+			}).join('&') : '';
+		}
 
-            var progressBar = null;
+		var requestId = 0;
+		var requestInfo = {str: "", received: 0}
 
-            OBJJ_PROGRESS_CALLBACK = function(percent, appSize, path)
-            {
-                percent = percent * 100;
+		function retrieve_more()
+		{
+			$.ajax({
+				url: "/search?" + serialize({
+								string: requestInfo.str, 
+								begin: requestInfo.received, 
+								limit: 30,
+								reqId: requestId})
+			}).then(function(data) {
 
-                if (!progressBar)
-                    progressBar = document.getElementById("progress-bar");
+				try
+				{
+					data = JSON.parse(data);
+				}
+				catch (e) {}
+				console.log(data)
 
-                if (progressBar)
-                    progressBar.style.width = Math.min(percent, 100) + "%";
-            }
+				if (data.total == 0)
+				{
+					$('#progressBar').css('width', '100%').attr('aria-valuenow', 100);
+					$('#progressBar').removeClass("progress-bar-striped");
+					$('#progressBar').addClass("progress-bar-success");
+					$('#progressBar').removeClass("active");
+					$('#progressBar').html("No Results");
+					return;
+				}
 
-            var loadingHTML =
-                    '<div id="loading">' +
-                    '    <div id="loading-text">Loading...</div>' +
-                    '    <div id="progress-indicator">' +
-                    '        <span id="progress-bar" style="width:0%"></span>' +
-                    '    </div>' +
-                    '</div>';
-        </script>
+				if (data.requestId != requestId)
+				{
+					// wrong search. cancel.
+					return;
+				}
 
-        <script type="text/javascript" src="Frameworks/Objective-J/Objective-J.js" charset="UTF-8"></script>
 
-        <style type="text/css">
-            html, body, h1, p {
-                margin: 0;
-                padding: 0;
-            }
+				var i=0;
+				var count = 1;
+				for (i=0; i<data.partresult.length; i++)
+				{
+					if (data.partresult[i].length == 0)
+					{
+						continue;
+					}
 
-            /* We need a body wrapper because Cappuccino is unhappy if we change the body element */
-            #cappuccino-body {
-                /* Position it absolutely so it will fill the height without content */
-                position: absolute;
-                top: 0;
-                bottom: 0;
-                width: 100%;
+					var row = old_tbody.insertRow();
+					row.insertCell().innerText = count++;
 
-                /* Put it at the bottom of the stack so it doesn't interfere with UI */
-                z-index: 0;
-            }
+					var cell;
+					for (cell=0; cell<data.partresult[i].length; cell++)
+					{
+						var cellElem = row.insertCell();
+						cellElem.innerText = data.partresult[i][cell];
+						if (cell > 2)
+						{
+							cellElem.className= "hidden-xs";
+						}
+					}
+				}
 
-            #cappuccino-body .container {
-                display: table;
-                margin: 0 auto;
-                height: 100%;
-            }
+				requestInfo.received += data.partresult.length;
+				var percentage = (requestInfo.received / data.total * 100);
+				if (percentage > 100)
+				{
+					percentage = 100;
+				}
 
-            #cappuccino-body .content {
-                display: table-cell;
-                height: 100%;
-                vertical-align: top;
-            }
+				$('#progressBar').css('width', percentage+'%').attr('aria-valuenow', percentage); 
+				$('#progressBar').html(Math.floor(percentage) + "%");
 
-            #loading {
-                position: relative;
-                top: 35%;
-            }
 
-            #loading-text {
-                height: 1.5em;
-                color: #555;
-                font: normal bold 36px/36px Arial, sans-serif;
-            }
+				if (requestInfo.received < data.total)
+				{
+					setTimeout(function(){ retrieve_more(); }, 0);
+				}
+				else
+				{
+					$('#progressBar').removeClass("progress-bar-striped");
+					$('#progressBar').addClass("progress-bar-success");
+					$('#progressBar').removeClass("active");
+					$('#progressBar').html("100%");
+				}
 
-            #progress-indicator {
-                padding: 0px;
-                height: 16px;
-                border: 5px solid #555;
-                border-radius: 18px;
-                background-color: white;
-            }
+			});
+		}
 
-            #progress-bar {
-                position: relative;
-                top: -1px;
-                left: -1px;
-                display: block;
-                height: 18px;
+		var old_tbody = document.getElementById("tableBody");
 
-                /* Compensate for moving the bar left 1px to overlap the indicator border */
-                border-right: 1px solid #555;
-                background-color: #555;
-            }
+	    $('#search-form').submit(function(event)
+		{
+			requestId++;
 
-            #noscript {
-                position: relative;
-                top: 35%;
-                padding: 1em 1.5em;
-                border: 5px solid #555;
-                border-radius: 16px;
-                background-color: white;
-                color: #555;
-                text-align: center;
-                font: bold 24px Arial, sans-serif;
-            }
+			// prevent default browser behaviour
+			event.preventDefault();
 
-            #noscript a {
-                color: #98c0ff;
-                text-decoration: none;
-            }
-        </style>
-    </head>
+			var new_tbody = document.createElement('tbody');
+			old_tbody.parentNode.replaceChild(new_tbody, old_tbody)
+			old_tbody = new_tbody;
 
-    <body>
-        <div id="cappuccino-body">
-            <div class="container">
-                <div class="content">
-                    <script type="text/javascript">
-                        document.write(loadingHTML);
-                    </script>
-                </div>
-            </div>
-            <noscript style="position:absolute; top:0; left:0; width:100%; height:100%">
-                <div class="container">
-                    <div class="content">
-                        <div id="noscript">
-                            <p style="font-size:120%; margin-bottom:.75em">JavaScript is required for this site.</p>
-                            <p><a href="http://www.enable-javascript.com" target="_blank">Enable JavaScript</a></p>
-                        </div>
-                    </div>
-                </div>
-            </noscript>
-        </div>
-    </body>
+			requestInfo = {
+				str: $("#searchText").val(),
+				received: 0
+			}
+
+			$('#progressBar').css('width', 0+'%').attr('aria-valuenow', 0);
+			$('#progressBar').html("0%");
+			$('#progressBar').addClass("progress-bar-striped");
+			$('#progressBar').removeClass("progress-bar-success");
+			$('#progressBar').addClass("active");
+
+
+			retrieve_more();
+		});
+	});
+	
+</script>
+</body>
 </html>
