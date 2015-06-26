@@ -50,6 +50,27 @@
   </div>
 </div>
 
+
+<div class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+<div class="modal-dialog modal-sm">
+  <div class="modal-content">
+
+    <div class="modal-header">
+      <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      <h4 class="modal-title" id="mySmallModalLabel">Small modal</h4>
+    </div>
+    <div class="modal-body">
+      <p>Artist: <span id="artist"></p>
+      <p>Number: <span id="number"></p>
+      <p>Intro: <span  id="intro"></p>
+      <p>Tie-up: <span id="tie-up"></p>
+      <p>Genre: <span  id="genre"></p>
+    </div>
+  </div><!-- /.modal-content -->
+</div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+
 <script type="text/javascript">
 	$(document).ready(function() {
 
@@ -70,6 +91,9 @@
 
 		var requestId = 0;
 		var requestInfo = {str: "", received: 0}
+		var count = 1;
+
+		var mdata = {};
 
 		function retrieve_more()
 		{
@@ -106,7 +130,6 @@
 
 
 				var i=0;
-				var count = 1;
 				for (i=0; i<data.partresult.length; i++)
 				{
 					if (data.partresult[i].length == 0)
@@ -114,19 +137,28 @@
 						continue;
 					}
 
+					mdata[count] = data.partresult[i];
+
 					var row = old_tbody.insertRow();
-					row.insertCell().innerText = count++;
+					row.insertCell().innerText = count;
 
 					var cell;
 					for (cell=0; cell<data.partresult[i].length; cell++)
 					{
 						var cellElem = row.insertCell();
 						cellElem.innerText = data.partresult[i][cell];
+						if (cell == 1)
+						{
+							cellElem.innerHTML = '<a href="#" class="songTitle" data-id="' + count + '" data-toggle="modal" data-target=".bs-example-modal-sm">' + data.partresult[i][cell] + '</a>';
+						}
+
 						if (cell > 2)
 						{
 							cellElem.className= "hidden-xs";
 						}
 					}
+
+					count++;
 				}
 
 				requestInfo.received += data.partresult.length;
@@ -159,7 +191,10 @@
 
 	    $('#search-form').submit(function(event)
 		{
+			count = 1;
+			mdata = [];
 			requestId++;
+
 
 			// prevent default browser behaviour
 			event.preventDefault();
@@ -181,6 +216,20 @@
 
 
 			retrieve_more();
+		});
+
+		$(document).on("click", ".songTitle", function () {
+
+			var songId = $(this).data('id');
+			var songData = mdata[songId];
+
+			$('#mySmallModalLabel').html(songData[1]);
+			$('#artist').html(songData[0]);
+			$('#number').html(songData[2]);
+			$('#intro').html(songData[3]);
+			$('#tie-up').html(songData[4]);
+			$('#genre').html(songData[5]);
+
 		});
 	});
 	
