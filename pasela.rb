@@ -1,6 +1,7 @@
 # -*- encoding: utf-8 -*-
 
 require 'sinatra'
+require 'newrelic_rpm'
 require 'net/http'
 require "addressable/uri"
 require 'json'
