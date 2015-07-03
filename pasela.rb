@@ -7,7 +7,6 @@ require 'json'
 
 class Pasela < Sinatra::Base
 
-	set :environment, :production
 	set :public_folder, 'public'
 
 	get "/" do
