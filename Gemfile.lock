@@ -1,32 +1,44 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    addressable (2.3.8)
-    daemons (1.2.3)
-    eventmachine (1.0.7)
-    json (1.8.3)
-    newrelic_rpm (3.12.0.288)
-    rack (1.6.4)
-    rack-cors (0.4.0)
-    rack-protection (1.5.3)
+    addressable (2.8.1)
+      public_suffix (>= 2.0.2, < 6.0)
+    daemons (1.4.1)
+    eventmachine (1.2.7)
+    honeysearch (0.1.1)
+    json (2.6.2)
+    mustermann (2.0.2)
+      ruby2_keywords (~> 0.0.1)
+    newrelic_rpm (8.10.1)
+    public_suffix (5.0.0)
+    rack (2.2.4)
+    rack-cors (1.1.1)
+      rack (>= 2.0.0)
+    rack-protection (2.2.2)
       rack
-    sinatra (1.4.6)
-      rack (~> 1.4)
-      rack-protection (~> 1.4)
-      tilt (>= 1.3, < 3)
-    thin (1.6.3)
+    ruby2_keywords (0.0.5)
+    sinatra (2.2.2)
+      mustermann (~> 2.0)
+      rack (~> 2.2)
+      rack-protection (= 2.2.2)
+      tilt (~> 2.0)
+    thin (1.8.1)
       daemons (~> 1.0, >= 1.0.9)
-      eventmachine (~> 1.0)
-      rack (~> 1.0)
-    tilt (2.0.1)
+      eventmachine (~> 1.0, >= 1.0.4)
+      rack (>= 1, < 3)
+    tilt (2.0.11)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
   addressable
+  honeysearch (= 0.1.1)
   json
   newrelic_rpm
   rack-cors
   sinatra
   thin
+
+BUNDLED WITH
+   2.1.4

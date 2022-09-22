@@ -1,12 +1,10 @@
 # -*- encoding: utf-8 -*-
 
 require 'sinatra'
-require 'net/http'
-require "addressable/uri"
+require 'honeysearch'
 require 'json'
 
 class Pasela < Sinatra::Base
-
 	set :public_folder, 'public'
 
 	get "/" do
@@ -14,27 +12,15 @@ class Pasela < Sinatra::Base
 	end
 
 	get '/search' do
-		uri = Addressable::URI.new
-		uri.query_values = {ss: params["string"], line: params["begin"], lim: params["limit"]}
 
-		url = URI.parse('http://pasela.jp/search/pc/search.php')
-		req = Net::HTTP::Post.new(url.to_s)
-		req.body = uri.query
-		res = Net::HTTP.start(url.host, url.port) do |http|
-		  http.request(req)
-		end
+		search = Honeysearch::Search.new(params["string"], params["begin"].to_i / 30)
 
-		content = res.body.encode("UTF-8", "Shift_JIS", :invalid => :replace, :undef => :replace)
+		if search.total_number != 0
+			total = search.total_number
 
-		totalMatch = /検索結果：([0-9]+)曲/.match(content)
-
-		rowMatch = content.scan(/\<TR\>\<TD\>(.+?)\<\/TD\>\<\/TR\>/)
-
-		if totalMatch
-			total = totalMatch.captures[0]
-
-
-			partresult = rowMatch.map { |x| x[0].split("</TD><TD>").map { |y| y.gsub("&nbsp;","") } }
+			partresult = Honeysearch::Parser.new(search.result).results.map do |x|
+				x.splitdata
+			end
 
 			response.headers['Access-Control-Allow-Origin'] = '*'
 
@@ -44,5 +30,7 @@ class Pasela < Sinatra::Base
 		else
 			{partresult: [], total: 0, requestId:params["reqId"]}.to_json
 		end
+	rescue
+		{partresult: [], total: 0, requestId:params["reqId"]}.to_json
 	end
 end
