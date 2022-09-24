@@ -1,5 +1,7 @@
 source 'https://rubygems.org'
 
+ruby "3.1.0"
+
 gem 'sinatra'
 gem 'rack-cors'
 gem 'addressable'
